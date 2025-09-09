@@ -29,7 +29,7 @@ class EconomicDataProvider:
         import os
         
         # Create MCP client for FRED server
-        fred_api_key = os.environ.get("FRED_API_KEY", "90b4660facf6abfee9f653c2abbd4999")
+        fred_api_key = os.environ.get("FRED_API_KEY", "")
         
         self.mcp_client = MCPClient(
             lambda: stdio_client(

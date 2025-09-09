@@ -1,6 +1,4 @@
-# Building Scalable AI Agents with AWS Strands and Object-Oriented Design
-
-> **AWS Community Day Demo**: Combining bleeding-edge AWS SDK with battle-tested OOP patterns to build production-ready intelligent agents
+# Building Scalable AI Agents with AWS Strands
 
 ## 🎯 Overview
 
@@ -11,13 +9,12 @@ You'll learn how to:
 - Keep their state organized
 - Build systems that are easy to extend as the technology evolves
 - Avoid common pitfalls when working with AI agents
-- Combine OOP patterns with this bleeding-edge AWS SDK for a serious head start
 
 ## 🚀 Why This Matters
 
 Building AI agents without proper architecture is like building a house without blueprints. As your agent system grows:
-- **Without OOP**: Tangled code, hard to test, impossible to maintain
-- **With OOP**: Clean interfaces, testable components, easy to extend
+- **Without principles**: Tangled code, hard to test, impossible to maintain
+- **With principles**: Clean interfaces, testable components, easy to extend
 
 This project demonstrates how to create scalable agents from the beginning that can be easily upgraded, reused, and tested.
 
@@ -108,7 +105,7 @@ graph TB
     style TOOLS fill:#e8f5e9
 ```
 
-#### Key OOP Concepts Demonstrated
+#### Key Concepts Demonstrated
 
 - **Data Transfer Objects (DTOs)**: `CompanyFinancials` and `EconomicIndicator` models with computed properties
 - **Single Responsibility**: `MarketDataProvider` only handles data access
@@ -160,7 +157,7 @@ graph TB
     style STATE fill:#e8f5e9
 ```
 
-#### Key OOP Concepts Demonstrated
+#### Key Concepts Demonstrated
 
 - **Entity with State**: `Portfolio` class maintains state across operations
 - **Builder Pattern**: Fluent interface for portfolio construction
@@ -222,7 +219,7 @@ graph TB
     style CTX fill:#fff
 ```
 
-#### Key OOP Concepts Demonstrated
+#### Key Concepts Demonstrated
 
 - **Factory Pattern**: `AgentFactory` creates specialized agents
 - **Strategy Pattern**: Different agents implement different analysis strategies
@@ -248,7 +245,7 @@ graph TB
 4. **MCP Integration**: External data source connectivity
 5. **Type Safety**: Full type hints and validation
 
-### From OOP/Clean Architecture
+### From SW Architecture
 
 1. **Separation of Concerns**: Each class has one reason to change
 2. **Dependency Inversion**: High-level modules don't depend on low-level modules
@@ -324,7 +321,7 @@ python demos/swarm/live.py         # Presentation mode
 
 ## 🧪 Testing: The Power of Good Design
 
-One of the biggest benefits of proper OOP design is **testability**. Every component in this project can be tested in isolation without complex setup or external dependencies.
+One of the biggest benefits of proper design is **testability**. Every component in this project can be tested in isolation without complex setup or external dependencies.
 
 ### Test Structure
 
@@ -443,7 +440,7 @@ def test_add_position(self):
 | **Entity Tests** | `test_portfolio.py` | • State management<br>• Fluent interfaces<br>• Aggregation logic<br>• Instance isolation |
 | **Calculator Tests** | `test_risk_calculator.py` | • Complex calculations<br>• Statistical functions<br>• Edge cases<br>• Scenario testing |
 
-### Testing Benefits from OOP Design
+### Testing Benefits from Design
 
 1. **No Complex Setup**: Each component can be instantiated independently
 2. **No External Dependencies**: Tests run without databases, APIs, or files
@@ -452,9 +449,9 @@ def test_add_position(self):
 5. **Mockable**: Clear interfaces make mocking trivial
 6. **Comprehensive**: Can test edge cases easily
 
-### Example: Testing Without vs With OOP
+### Example: Testing Without vs With
 
-#### ❌ Without OOP (Hard to Test)
+#### ❌ Without (Hard to Test)
 
 ```python
 # Everything mixed together - hard to test
@@ -473,7 +470,7 @@ def analyze_portfolio():
     return risk  # Which risk? Last one?
 ```
 
-#### ✅ With OOP (Easy to Test)
+#### ✅ With (Easy to Test)
 
 ```python
 class PortfolioAnalyzer:
@@ -585,11 +582,9 @@ class AgentFactory:
 
 ## 🎯 Key Takeaways
 
-1. **OOP isn't outdated** - It's essential for managing AI agent complexity
-2. **Clean architecture scales** - Start with good patterns, avoid refactoring later
-3. **Testability matters** - Pure functions and clear interfaces make testing easy
-4. **State management is crucial** - Agents need memory, OOP provides structure
-5. **Composition enables flexibility** - Swap components without rewriting
+1. **Clean architecture scales** - Start with good patterns, avoid refactoring later
+2. **Testability matters** - Pure functions and clear interfaces make testing easy
+3. **Composition enables flexibility** - Swap components without rewriting
 
 ## 🚀 What's Next?
 
