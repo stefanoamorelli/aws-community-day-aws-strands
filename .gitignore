@@ -162,3 +162,6 @@ $RECYCLE.BIN/
 .directory
 .Trash-*
 .nfs*
+
+# Presentation files
+AWS_COMMUNITY_DAY_PRESENTATION.md
