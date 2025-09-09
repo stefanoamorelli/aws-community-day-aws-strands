@@ -20,7 +20,8 @@ class EconomicSwarm:
         max_handoffs: int = 10,
         max_iterations: int = 15,
         execution_timeout: float = 300.0,
-        node_timeout: float = 60.0
+        node_timeout: float = 60.0,
+        use_mcp: bool = True
     ):
         """
         Initialize Economic Analysis Swarm.
@@ -33,9 +34,11 @@ class EconomicSwarm:
             max_iterations: Maximum total iterations
             execution_timeout: Total execution timeout in seconds
             node_timeout: Per-agent timeout in seconds
+            use_mcp: Whether to use MCP server for FRED data
         """
         self.context = EconomicContext()
-        self.data_provider = EconomicDataProvider(self.context)
+        self.use_mcp = use_mcp
+        self.data_provider = EconomicDataProvider(self.context, use_mcp=use_mcp)
         self.model = self._create_model(api_key, model_id, temperature)
         self.agent_factory = AgentFactory(self.model, self.data_provider)
         self.swarm = self._create_swarm(
@@ -82,15 +85,39 @@ class EconomicSwarm:
         Returns:
             Analysis results with context
         """
-        # Execute swarm
-        result = self.swarm(query)
+        # If using MCP, we need to run within context
+        if self.use_mcp and self.data_provider.mcp_client:
+            try:
+                with self.data_provider.mcp_client:
+                    # Get FRED tools while in context
+                    self.data_provider.fred_tools = self.data_provider.mcp_client.list_tools_sync()
+                    print(f"✅ Connected to FRED MCP - {len(self.data_provider.fred_tools)} tools available")
+                    
+                    # Recreate agents with MCP tools
+                    self.agent_factory = AgentFactory(self.model, self.data_provider)
+                    # Store original parameters
+                    self.swarm = self._create_swarm(10, 15, 300.0, 60.0)
+                    
+                    # Execute swarm within MCP context
+                    result = self.swarm(query)
+            except Exception as e:
+                print(f"⚠️ MCP execution failed: {e}")
+                print("   Falling back to mock data")
+                self.data_provider.use_mcp = False
+                self.agent_factory = AgentFactory(self.model, self.data_provider)
+                self.swarm = self._create_swarm(10, 15, 300.0, 60.0)
+                result = self.swarm(query)
+        else:
+            # Execute without MCP
+            result = self.swarm(query)
         
         # Return results with context
         return {
             "response": str(result),
             "status": result.status.value if hasattr(result, 'status') else "completed",
             "context": self.context.summary(),
-            "execution_details": self._extract_execution_details(result)
+            "execution_details": self._extract_execution_details(result),
+            "using_mcp": self.use_mcp and bool(self.data_provider.fred_tools)
         }
     
     def _extract_execution_details(self, result) -> Dict:

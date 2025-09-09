@@ -35,34 +35,65 @@ class AgentFactory:
     
     def create_data_collector(self) -> Agent:
         """Create data collection agent"""
+        # Get appropriate tools (MCP or mock)
+        tools = []
+        if self.data_provider.use_mcp and self.data_provider.fred_tools:
+            # Use MCP FRED tools
+            tools = self.data_provider.fred_tools
+        else:
+            # Use mock tool
+            tools = [self.data_provider.get_economic_indicator]
+        
         return Agent(
             name="data_collector",
             model=self.model,
-            tools=[self.data_provider.get_economic_indicator],
-            system_prompt="""You are a data collection specialist. Your role is to:
-            1. Gather economic indicator data systematically
-            2. Identify which indicators show concerning trends
+            tools=tools,
+            system_prompt="""You are a data collection specialist with access to Federal Reserve Economic Data (FRED). Your role is to:
+            1. Gather economic indicator data systematically using FRED MCP tools
+            2. Identify which indicators show concerning trends  
             3. Hand off to the analyst for interpretation
             
-            When you find concerning trends (high volatility, rising rates, etc.), 
-            use handoff_to_agent to pass the data to 'analyst' for deeper analysis.
+            FRED MCP tools available:
+            - fred_search: Search for economic series by keywords (e.g., search for "GDP", "unemployment")
+            - fred_get_series: Get actual data for a series ID (e.g., "GDP", "UNRATE", "CPIAUCSL")
+            - fred_browse: Browse categories to find relevant series
             
-            Always collect GDP, UNRATE, VIXCLS, DFF, and CPI data for comprehensive coverage."""
+            Key series IDs to collect data for:
+            - GDP: Gross Domestic Product (use fred_get_series with series_id="GDP")
+            - UNRATE: Unemployment Rate (use fred_get_series with series_id="UNRATE")
+            - DFF: Federal Funds Rate (use fred_get_series with series_id="DFF")
+            - CPIAUCSL: Consumer Price Index (use fred_get_series with series_id="CPIAUCSL")
+            - For volatility: Search for "VIX" or "volatility index"
+            
+            First use fred_get_series to get the latest values for these key indicators, then analyze trends.
+            When you find concerning trends, use handoff_to_agent to pass to 'analyst'."""
         )
     
     def create_analyst(self) -> Agent:
         """Create analysis agent"""
+        # Get appropriate tools (MCP or mock)
+        tools = [self.data_provider.get_company_exposure]
+        if self.data_provider.use_mcp and self.data_provider.fred_tools:
+            # Add MCP FRED tools
+            tools.extend(self.data_provider.fred_tools)
+        else:
+            # Add mock tool
+            tools.insert(0, self.data_provider.get_economic_indicator)
+        
         return Agent(
             name="analyst",
             model=self.model,
-            tools=[
-                self.data_provider.get_economic_indicator,
-                self.data_provider.get_company_exposure
-            ],
-            system_prompt="""You are an economic analyst. Your role is to:
+            tools=tools,
+            system_prompt="""You are an economic analyst with access to FRED data. Your role is to:
             1. Analyze relationships between economic indicators
             2. Assess how indicators affect specific companies
             3. Identify systemic risks and correlations
+            
+            Use FRED MCP tools to get additional data as needed:
+            - fred_get_series: Get time series data (e.g., series_id="GDP", "UNRATE", "DFF")
+            - fred_search: Find related economic series
+            
+            Also use get_company_exposure to analyze company-specific impacts.
             
             When you identify high-risk situations, use handoff_to_agent 
             to pass your analysis to 'risk_assessor' for final evaluation.

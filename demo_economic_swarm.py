@@ -28,13 +28,15 @@ def main():
         print("\n⚙️ Initializing Economic Analysis Swarm...")
         swarm = EconomicSwarm(
             max_handoffs=10,
-            execution_timeout=300.0
+            execution_timeout=300.0,
+            use_mcp=True  # Enable MCP for real FRED data
         )
         print("✅ Swarm initialized with 4 specialized agents:")
         print("  • Coordinator - Orchestrates the analysis")
-        print("  • Data Collector - Gathers economic indicators")
+        print("  • Data Collector - Gathers economic indicators (via FRED MCP)")
         print("  • Analyst - Analyzes relationships and impacts")
-        print("  • Risk Assessor - Evaluates risks and recommendations\n")
+        print("  • Risk Assessor - Evaluates risks and recommendations")
+        print("\n🔌 MCP Integration: Attempting to connect to FRED MCP server...\n")
         
         # Demo 1: Comprehensive Economic Analysis
         print("🤖 Demo 1: Comprehensive Economic Analysis")
@@ -52,6 +54,10 @@ def main():
         print("Response:")
         print(result['response'])
         print_execution_details(result['execution_details'])
+        if result.get('using_mcp'):
+            print("  • Data source: FRED MCP Server (Real-time data)")
+        else:
+            print("  • Data source: Mock data (MCP unavailable)")
         print()
         
         # Demo 2: Company-Specific Analysis

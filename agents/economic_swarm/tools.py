@@ -1,7 +1,9 @@
-"""Tools for economic swarm analysis"""
+"""Tools for economic swarm analysis with MCP integration"""
 
 from strands import tool
-from typing import Dict, List
+from typing import Dict, List, Optional, Any
+from mcp import stdio_client, StdioServerParameters
+from strands.tools.mcp import MCPClient
 from .models import (
     EconomicIndicator, CompanyExposure, RiskAssessment,
     RiskLevel, Sensitivity, EconomicContext
@@ -9,14 +11,41 @@ from .models import (
 
 
 class EconomicDataProvider:
-    """Provider for economic data and analysis tools"""
+    """Provider for economic data and analysis tools with MCP integration"""
     
-    def __init__(self, context: EconomicContext):
+    def __init__(self, context: EconomicContext, use_mcp: bool = True):
         self.context = context
-        self._init_data()
+        self.use_mcp = use_mcp
+        self.mcp_client: Optional[MCPClient] = None
+        self.fred_tools = []
+        
+        if use_mcp:
+            self._init_mcp()
+        else:
+            self._init_data()
+    
+    def _init_mcp(self):
+        """Initialize MCP connection to FRED server"""
+        import os
+        
+        # Create MCP client for FRED server
+        fred_api_key = os.environ.get("FRED_API_KEY", "90b4660facf6abfee9f653c2abbd4999")
+        
+        self.mcp_client = MCPClient(
+            lambda: stdio_client(
+                StdioServerParameters(
+                    command="/usr/bin/node",
+                    args=["/home/amorelli/development/fred-mcp-server/build/index.js"],
+                    env={"FRED_API_KEY": fred_api_key}
+                )
+            )
+        )
+        
+        # Will get tools when entering context
+        print("✅ FRED MCP server configured (will connect on use)")
     
     def _init_data(self):
-        """Initialize mock data sources"""
+        """Initialize mock data sources (fallback when MCP not available)"""
         self.indicator_data = {
             "GDP": {"value": 27.96, "unit": "Trillion USD", "trend": "growing", "risk": "low"},
             "UNRATE": {"value": 3.7, "unit": "Percent", "trend": "stable", "risk": "low"},
@@ -234,11 +263,39 @@ class EconomicDataProvider:
             "context_summary": self.context.summary()
         }
     
+    def get_mcp_tools(self):
+        """Get FRED MCP tools if available"""
+        if self.mcp_client and not self.fred_tools:
+            try:
+                # Must use within context manager
+                with self.mcp_client:
+                    self.fred_tools = self.mcp_client.list_tools_sync()
+                    print(f"✅ Connected to FRED MCP server - {len(self.fred_tools)} tools available")
+            except Exception as e:
+                print(f"⚠️ Could not connect to FRED MCP: {e}")
+                print("   Falling back to mock data")
+                self.use_mcp = False
+                self.fred_tools = []
+        return self.fred_tools
+    
     def get_all_tools(self):
         """Get all tools for agents"""
-        return [
-            self.get_economic_indicator,
+        tools = [
             self.get_company_exposure,
             self.calculate_risk_score,
             self.analyze_systemic_risk
         ]
+        
+        if self.use_mcp:
+            # Add MCP tools if available
+            mcp_tools = self.get_mcp_tools()
+            if mcp_tools:
+                tools.extend(mcp_tools)
+            else:
+                # Fallback to mock indicator tool
+                tools.insert(0, self.get_economic_indicator)
+        else:
+            # Use mock indicator tool
+            tools.insert(0, self.get_economic_indicator)
+        
+        return tools
